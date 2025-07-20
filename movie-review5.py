@@ -1,10 +1,10 @@
 import streamlit as st
 import requests
 import openai 
-
 # --- API KEYS ---
-openai.api_key = "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"
-TMDB_API_KEY = "b44d671a82ca96e51703f066657b7c56" 
+# Securely access secrets
+TMDB_API_KEY = st.secrets["TMDB_API_KEY"]
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # --- Streamlit Page Config ---
 st.set_page_config(page_title="Bollywood Movie & Review App", page_icon="🎬", layout="centered")
