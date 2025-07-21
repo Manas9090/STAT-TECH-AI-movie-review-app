@@ -1,10 +1,17 @@
 import streamlit as st
 import requests
-import openai 
-from langsmith import traceable
-from langchain_openai import ChatOpenAI
 import os
+from PIL import Image
+from io import BytesIO
+from dotenv import load_dotenv
 
+# OpenAI legacy API (v0.28)
+import openai
+
+# LangChain Core Components (works with older versions like 0.0.320)
+from langchain.llms import OpenAI
+from langchain.chains import LLMChain
+from langchain.prompts import PromptTemplate
 # --- API KEYS ---
 TMDB_API_KEY = st.secrets["TMDB_API_KEY"]
 openai.api_key = st.secrets["OPENAI_API_KEY"]
