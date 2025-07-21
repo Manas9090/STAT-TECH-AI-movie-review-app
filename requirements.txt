@@ -1,8 +1,9 @@
 streamlit>=1.32.0
+requests
+Pillow
 openai==0.28
 langchain>=0.1.16
-langchain-community>=0.0.30
 langchain-openai>=0.1.6
 langsmith>=0.1.20
-requests
+langchain-community>=0.0.30
 python-dotenv
