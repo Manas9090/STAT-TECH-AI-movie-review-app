@@ -1,6 +1,7 @@
 streamlit
-requests
-openai==0.28
+openai
 langchain
+langchain-openai
+requests
 python-dotenv
 tqdm
