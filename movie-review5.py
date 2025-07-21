@@ -4,7 +4,7 @@ import os
 from PIL import Image
 from io import BytesIO
 from dotenv import load_dotenv
-
+from langchain.llms import OpenAI
 # OpenAI legacy API (v0.28)
 import openai
 
@@ -48,8 +48,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- LangChain LLM ---
-llm = ChatOpenAI(model="gpt-4", temperature=0.7)
-
+#llm = ChatOpenAI(model="gpt-4", temperature=0.7)
+llm = OpenAI(temperature=0.7, model_name="gpt-4")
 # --- Functions ---
 def get_movie_info(title):
     try:
