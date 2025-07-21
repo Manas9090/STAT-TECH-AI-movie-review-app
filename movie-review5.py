@@ -4,15 +4,15 @@ import os
 from PIL import Image
 from io import BytesIO
 from dotenv import load_dotenv
-from langchain.llms import OpenAI
-# OpenAI legacy API (v0.28)
-import openai
 
-# LangChain Core Components (works with older versions like 0.0.320)
+# LangChain and OpenAI
 from langchain.llms import OpenAI
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
-# --- API KEYS ---
+from langsmith.trace import traceable
+import openai
+
+# --- API Keys Configuration ---
 TMDB_API_KEY = st.secrets["TMDB_API_KEY"]
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 os.environ["LANGCHAIN_API_KEY"] = st.secrets["LANGCHAIN_API_KEY"]
@@ -48,8 +48,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- LangChain LLM ---
-#llm = ChatOpenAI(model="gpt-4", temperature=0.7)
 llm = OpenAI(temperature=0.7, model_name="gpt-4")
+
 # --- Functions ---
 def get_movie_info(title):
     try:
@@ -61,11 +61,7 @@ def get_movie_info(title):
 
             video_url = f"https://api.themoviedb.org/3/movie/{movie_id}/videos?api_key={TMDB_API_KEY}"
             video_response = requests.get(video_url).json()
-            trailer_key = None
-            for video in video_response.get("results", []):
-                if video['type'] == "Trailer" and video['site'] == "YouTube":
-                    trailer_key = video['key']
-                    break
+            trailer_key = next((video['key'] for video in video_response.get("results", []) if video['type'] == "Trailer" and video['site'] == "YouTube"), None)
 
             return {
                 'title': movie['title'],
@@ -81,12 +77,7 @@ def get_movie_info(title):
 @traceable(name="Generate Movie Review")
 def generate_review(title, overview):
     try:
-        prompt = f"""Write a short, emotional, and engaging movie review in English for this Hindi movie.
-
-Movie Title: {title}
-Overview: {overview}
-
-Review:"""
+        prompt = f"""Write a short, emotional, and engaging movie review in English for this Hindi movie.\n\nMovie Title: {title}\nOverview: {overview}\n\nReview:"""
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[{"role": "user", "content": prompt}]
@@ -99,14 +90,7 @@ Review:"""
 @traceable(name="Movie Recommendation")
 def ask_llm_for_movie_suggestions(user_query):
     try:
-        prompt = f"""You are a Bollywood movie expert. Based on this user's request, suggest 3 relevant Hindi movies to watch.
-
-User Request: "{user_query}"
-
-Reply format:
-1. Movie Name - 1-line reason
-
-Only suggest family-friendly Hindi movies unless user specifies otherwise. Answer in plain English."""
+        prompt = f"""You are a Bollywood movie expert. Based on this user's request, suggest 3 relevant Hindi movies to watch.\n\nUser Request: \"{user_query}\"\n\nReply format:\n1. Movie Name - 1-line reason\n\nOnly suggest family-friendly Hindi movies unless user specifies otherwise. Answer in plain English."""
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[{"role": "user", "content": prompt}]
@@ -116,13 +100,12 @@ Only suggest family-friendly Hindi movies unless user specifies otherwise. Answe
         st.error(f"Error generating recommendations: {e}")
         return "⚠️ Could not fetch suggestions."
 
-
-# --- Header ---
+# --- UI Layout ---
 st.markdown("<h1 style='text-align: center;'>🎬 STAT-TECH-AI: Your Movie Search Buddy</h1>", unsafe_allow_html=True)
 st.markdown("<h5 style='text-align: center; color: grey;'>Powered by STAT-TECH-AI 💖</h5>", unsafe_allow_html=True)
 st.markdown("<hr style='border: 1px solid #ffd1dc;'>", unsafe_allow_html=True)
 
-# --- Search Movie ---
+# --- Movie Search ---
 st.subheader("🔍 Search a Hindi Movie")
 movie_title = st.text_input("Enter the name of a Bollywood movie:")
 
@@ -132,7 +115,7 @@ if movie_title:
 
     if movie:
         poster_url = movie.get('poster')
-        if poster_url and isinstance(poster_url, str) and poster_url.startswith("http") and poster_url.lower().endswith((".jpg", ".jpeg", ".png", ".gif")):
+        if poster_url and poster_url.startswith("http") and poster_url.lower().endswith((".jpg", ".jpeg", ".png", ".gif")):
             st.image(poster_url, width=300)
         else:
             st.warning("🎬 Poster not available or not a valid image URL.")
@@ -166,9 +149,8 @@ if movie_title:
     else:
         st.warning("😢 Movie not found in TMDB. Please try a different title.")
 
+# --- Movie Recommendations ---
 st.markdown("<hr style='border: 1px dashed #ff99aa;'>", unsafe_allow_html=True)
-
-# --- Recommendations ---
 st.subheader("🤖 Ask for Movie Recommendations")
 user_query = st.text_input("Ask me anything! (e.g., '3 emotional Bollywood movies for weekend')")
 
@@ -178,9 +160,8 @@ if user_query:
         st.markdown("### 🎥 AI Recommendations:")
         st.info(suggestions)
 
-st.markdown("<hr style='border: 1px dashed #ff99aa;'>", unsafe_allow_html=True)
-
 # --- Trending Movies ---
+st.markdown("<hr style='border: 1px dashed #ff99aa;'>", unsafe_allow_html=True)
 st.subheader("🔥 Latest Trending Hindi Movies")
 
 if st.button("🎬 Show Latest Hindi Movies"):
