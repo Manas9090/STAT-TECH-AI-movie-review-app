@@ -6,7 +6,6 @@ from langchain_openai import ChatOpenAI
 import os
 
 # --- API KEYS ---
-# Securely access secrets
 TMDB_API_KEY = st.secrets["TMDB_API_KEY"]
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 os.environ["LANGCHAIN_API_KEY"] = st.secrets["LANGCHAIN_API_KEY"]
@@ -16,7 +15,7 @@ os.environ["LANGCHAIN_ENDPOINT"] = st.secrets.get("LANGCHAIN_ENDPOINT", "https:/
 # --- Streamlit Page Config ---
 st.set_page_config(page_title="Bollywood Movie & Review App", page_icon="🎬", layout="centered")
 
-# --- Custom CSS for Styling ---
+# --- Custom CSS ---
 st.markdown("""
     <style>
     .main {
@@ -41,7 +40,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- LangChain Chat LLM Setup ---
+# --- LangChain LLM ---
 llm = ChatOpenAI(model="gpt-4", temperature=0.7)
 
 # --- Functions ---
@@ -116,7 +115,7 @@ st.markdown("<h1 style='text-align: center;'>🎬 STAT-TECH-AI: Your Movie Searc
 st.markdown("<h5 style='text-align: center; color: grey;'>Powered by STAT-TECH-AI 💖</h5>", unsafe_allow_html=True)
 st.markdown("<hr style='border: 1px solid #ffd1dc;'>", unsafe_allow_html=True)
 
-# --- Search Movie Section ---
+# --- Search Movie ---
 st.subheader("🔍 Search a Hindi Movie")
 movie_title = st.text_input("Enter the name of a Bollywood movie:")
 
@@ -125,7 +124,12 @@ if movie_title:
         movie = get_movie_info(movie_title)
 
     if movie:
-        st.image(movie['poster'], width=300)
+        poster_url = movie.get('poster')
+        if poster_url and isinstance(poster_url, str) and poster_url.startswith("http") and poster_url.lower().endswith((".jpg", ".jpeg", ".png", ".gif")):
+            st.image(poster_url, width=300)
+        else:
+            st.warning("🎬 Poster not available or not a valid image URL.")
+
         st.markdown(f"<h3 style='color:#ff0066'>{movie['title']} ({movie['release_date']})</h3>", unsafe_allow_html=True)
         st.write(movie['overview'])
 
@@ -139,7 +143,6 @@ if movie_title:
                 st.markdown("### 🧠 AI-Powered Review")
                 st.success(review)
 
-        # --- Cinema Booking Section ---
         st.markdown("<hr style='border: 1px dashed #ff99aa;'>", unsafe_allow_html=True)
         st.subheader("🎟️ Check Showtimes & Book Tickets Near You")
 
@@ -158,7 +161,7 @@ if movie_title:
 
 st.markdown("<hr style='border: 1px dashed #ff99aa;'>", unsafe_allow_html=True)
 
-# --- Recommendation Section ---
+# --- Recommendations ---
 st.subheader("🤖 Ask for Movie Recommendations")
 user_query = st.text_input("Ask me anything! (e.g., '3 emotional Bollywood movies for weekend')")
 
