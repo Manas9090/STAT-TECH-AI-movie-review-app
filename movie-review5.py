@@ -1,3 +1,6 @@
+from langchain_openai import ChatOpenAI
+from langchain_core.callbacks import traceable  # if using LangSmith tracing
+
 import streamlit as st
 import requests
 import os
