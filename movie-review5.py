@@ -1,10 +1,17 @@
 import streamlit as st
 import requests
 import openai 
+from langsmith import traceable
+from langchain_openai import ChatOpenAI
+import os
+
 # --- API KEYS ---
 # Securely access secrets
 TMDB_API_KEY = st.secrets["TMDB_API_KEY"]
 openai.api_key = st.secrets["OPENAI_API_KEY"]
+os.environ["LANGCHAIN_API_KEY"] = st.secrets["LANGCHAIN_API_KEY"]
+os.environ["LANGCHAIN_PROJECT"] = st.secrets["LANGCHAIN_PROJECT"]
+os.environ["LANGCHAIN_ENDPOINT"] = st.secrets.get("LANGCHAIN_ENDPOINT", "https://api.smith.langchain.com")
 
 # --- Streamlit Page Config ---
 st.set_page_config(page_title="Bollywood Movie & Review App", page_icon="🎬", layout="centered")
@@ -34,6 +41,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# --- LangChain Chat LLM Setup ---
+llm = ChatOpenAI(model="gpt-4", temperature=0.7)
+
 # --- Functions ---
 def get_movie_info(title):
     try:
@@ -62,6 +72,7 @@ def get_movie_info(title):
         st.error(f"Error fetching movie info: {e}")
     return None
 
+@traceable(name="Generate Movie Review")
 def generate_review(title, overview):
     try:
         prompt = f"""Write a short, emotional, and engaging movie review in English for this Hindi movie.
@@ -79,6 +90,7 @@ Review:"""
         st.error(f"Error generating review: {e}")
         return "⚠️ Review generation failed."
 
+@traceable(name="Movie Recommendation")
 def ask_llm_for_movie_suggestions(user_query):
     try:
         prompt = f"""You are a Bollywood movie expert. Based on this user's request, suggest 3 relevant Hindi movies to watch.
