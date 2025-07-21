@@ -1,6 +1,6 @@
-streamlit
-langchain
-langchain-openai
+streamlit>=1.30.0
 openai==0.28
-requests
+langchain==0.0.320
 python-dotenv
+requests
+Pillow
